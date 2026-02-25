@@ -13,6 +13,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grЁpc.NewServer()
 	pb.RegisterHelloServiceServer(grpcServer, &server{})
 }
