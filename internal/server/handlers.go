@@ -3,17 +3,25 @@ package structures
 import (
 	pb "ai-saas/proto"
 	"context"
+	"fmt"
 
 	db "ai-saas/internal/storage"
 
-	pgx "github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 )
 
 type Server struct {
 	must   pb.UnimplementedOrderServiceServer
-	db     pgx.Pool
+	db     pgxpool.Pool
 	logger zap.Logger
+}
+
+type GetResModel struct {
+	ves  float64
+	podh int
+	powt int
 }
 
 func NewServer(logger zap.Logger, ctx context.Context) *Server {
@@ -24,7 +32,53 @@ func NewServer(logger zap.Logger, ctx context.Context) *Server {
 	}
 }
 func (s *Server) AddRes(ctx context.Context, req *pb.AddResRequest) (*pb.AddResResponse, error) {
+	batch := pgx.Batch{}
 	for _, v := range req.SportsExercise {
-		_, err := s.db.Exec(ctx, d)
+		batch.Queue(`INSERT INTO KACH (USER,UPR,VES,PODH,POWT,DATE) VALUES($1,$2,$3,$4,$5,$6)`, req.User, v.Upr, v.Ves, v.Podh, v.Powt, v.Date)
 	}
+	br := s.db.SendBatch(ctx, &batch)
+	defer br.Close()
+
+	// Обязательно нужно вычитать все результаты!
+	for i := 0; i < len(req.SportsExercise); i++ {
+		_, err := br.Exec()
+		if err != nil {
+			s.logger.Error("ebat hendler AddRes %v", zap.Error(err))
+			return &pb.AddResResponse{Otv: "vse NE zaebis"}, nil
+		}
+	}
+
+	fmt.Println("AddRes выполнен")
+	return &pb.AddResResponse{Otv: "vse zaebis"}, nil
+}
+func (s *Server) GetRes(ctx context.Context, req *pb.GetResRequest) (*pb.GetResResponse, error) {
+	grpcRes := &pb.GetResResponse{}
+	for i := range req.Upr {
+		res, err := s.db.Query(ctx, `SELECT () FROM KACH WHERE DATE>=$1 AND DATE<=$2 AND UPR = '$3'`, req.Nachalo.AsTime(), req.Konec.AsTime(), req.Upr[i])
+		if err != nil {
+			s.logger.Error("error in GetRes", zap.Error(err))
+			return &pb.GetResResponse{}, err
+		}
+		defer res.Close()
+		var models []GetResModel
+		j := 0
+		max := 0.0
+		for res.Next() {
+			var model GetResModel
+			err := res.Scan(&model.podh, &model.powt, &model.ves)
+			if err != nil {
+				s.logger.Error("ne mogy rows v GetRes", zap.Error(err))
+				return &pb.GetResResponse{}, err
+			}
+			if model.ves > max {
+				max = model.ves
+			}
+			models = append(models, model)
+			j++
+		}
+		raznica := max - models[0].ves
+		sr := raznica / float64(len(models))
+		grpcRes.Results = append(grpcRes.Results, &pb.Get{Upr: req.Upr[i], Slab: models[0].ves, Siln: max, Sr: sr, Raznica: raznica})
+	}
+	return grpcRes, nil
 }
