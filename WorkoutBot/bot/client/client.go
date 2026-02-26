@@ -1,7 +1,7 @@
 package client
 
 import (
-	"ai-saas/proto"
+	"bot/proto"
 	"context"
 	"time"
 

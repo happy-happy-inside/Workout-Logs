@@ -46,24 +46,13 @@ func handleStart(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 }
 
 func handleHelp(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
-	text := `/start - welcome message
-	
-	/help - show this guide
-	
-	/add exercise reps sets weight date
-Example:
- /add bench 10 3 100 2026-02-26
-
-You can add multiple separated by comma:
- /add bench 10 3 100 2026-02-26, squat 8 4 140 2026-02-26
- 
-/get exercise
-Example:
- /get bench
-
-/top N
-Example:
- /top 10 (max 100)`
+	text := `Список команд:
+	/start - Приветсвенное сообщение
+	/help - Этот список
+	/add - Добавить новый результат
+	/get - Вывесити нужный результат
+	/top - Вывести топ юзеров
+	`
 
 	send(bot, msg.Chat.ID, text)
 }
@@ -112,7 +101,6 @@ func handleAdd(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 		})
 	}
 
-	// Здесь будет gRPC вызов
 	send(bot, msg.Chat.ID, fmt.Sprintf("Added %d workout(s)", len(workouts)))
 }
 
