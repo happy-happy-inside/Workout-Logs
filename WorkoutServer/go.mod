@@ -1,4 +1,4 @@
-module ai-saas
+module workoutserver
 
 go 1.25.1
 

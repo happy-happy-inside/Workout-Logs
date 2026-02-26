@@ -3,37 +3,29 @@ package main
 import (
 	"context"
 	"log"
-	"time"
+	"net"
+	hand "workoutserver/internal/server"
+	pb "workoutserver/proto"
 
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/reflection"
 )
 
 func main() {
-	// 1. Адрес сервера
-	serverAddr := "localhost:50051"
-
-	// 2. Устанавливаем соединение с сервером.
-	// grpc.WithTransportCredentials(insecure.NewCredentials()) отключает TLS,
-	// используйте только для разработки и тестирования.
-	conn, err := grpc.Dial(serverAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
-		log.Fatalf("Не удалось подключиться: %v", err)
+		log.Fatalf("failed to listen: %v", err)
 	}
-	defer conn.Close() // Важно закрыть соединение, когда оно больше не нужно
-
-	// 3. Создаем клиент для нашего сервиса (генерируется из .proto)
-	client := pb.NewGreeterClient(conn)
-
-	// 4. Подготавливаем контекст с таймаутом (рекомендуется для продакшена)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	// 5. Вызываем удаленный метод
-	response, err := client.SayHello(ctx, &pb.HelloRequest{Name: "Мир"})
-	if err != nil {
-		log.Fatalf("Ошибка при вызове SayHello: %v", err)
+	logger, _ := zap.NewProduction() // или zap.NewDevelopment() для дев-режима
+	defer logger.Sync()
+	ctx := context.Background()
+	server := hand.NewServer(ctx, logger)
+	defer server.Db.Close()
+	grpcServer := grpc.NewServer()
+	pb.RegisterOrderServiceServer(grpcServer, server)
+	reflection.Register(grpcServer)
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
 	}
-
-	log.Printf("Ответ от сервера: %s", response.GetMessage())
 }
