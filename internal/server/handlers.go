@@ -23,6 +23,10 @@ type GetResModel struct {
 	podh int
 	powt int
 }
+type top struct {
+	user string
+	ves  float64
+}
 
 func NewServer(logger zap.Logger, ctx context.Context) *Server {
 	return &Server{
@@ -54,7 +58,7 @@ func (s *Server) AddRes(ctx context.Context, req *pb.AddResRequest) (*pb.AddResR
 func (s *Server) GetRes(ctx context.Context, req *pb.GetResRequest) (*pb.GetResResponse, error) {
 	grpcRes := &pb.GetResResponse{}
 	for i := range req.Upr {
-		res, err := s.db.Query(ctx, `SELECT () FROM KACH WHERE DATE>=$1 AND DATE<=$2 AND UPR = '$3'`, req.Nachalo.AsTime(), req.Konec.AsTime(), req.Upr[i])
+		res, err := s.db.Query(ctx, `SELECT (PODH,POWT,VES) FROM KACH WHERE DATE>=$1 AND DATE<=$2 AND UPR = '$3' ORDER BY DATE ASC`, req.Nachalo.AsTime(), req.Konec.AsTime(), req.Upr[i])
 		if err != nil {
 			s.logger.Error("error in GetRes", zap.Error(err))
 			return &pb.GetResResponse{}, err
@@ -67,7 +71,7 @@ func (s *Server) GetRes(ctx context.Context, req *pb.GetResRequest) (*pb.GetResR
 			var model GetResModel
 			err := res.Scan(&model.podh, &model.powt, &model.ves)
 			if err != nil {
-				s.logger.Error("ne mogy rows v GetRes", zap.Error(err))
+				s.logger.Error("ne mogy rows scan v GetRes", zap.Error(err))
 				return &pb.GetResResponse{}, err
 			}
 			if model.ves > max {
@@ -81,4 +85,23 @@ func (s *Server) GetRes(ctx context.Context, req *pb.GetResRequest) (*pb.GetResR
 		grpcRes.Results = append(grpcRes.Results, &pb.Get{Upr: req.Upr[i], Slab: models[0].ves, Siln: max, Sr: sr, Raznica: raznica})
 	}
 	return grpcRes, nil
+}
+func (s *Server) TopUsers(ctx context.Context, req *pb.Uprajnenie) (*pb.Top, error) {
+	var tops []*pb.Dinah
+	res, err := s.db.Query(ctx, `SELECT (USER) FROM KACH WHERE UPR=$1 ORDER BY DESK LIMIT $2`, req.Upr, req.Count)
+	if err != nil {
+		s.logger.Error("error in TOP query", zap.Error(err))
+		return &pb.Top{}, err
+	}
+	defer res.Close()
+	for res.Next() {
+		var t pb.Dinah
+		err = res.Scan(&t.User, &t.Ves)
+		if err != nil {
+			s.logger.Error("error in TOP scan", zap.Error(err))
+			return &pb.Top{}, err
+		}
+		tops = append(tops, &t)
+	}
+	return &pb.Top{Top: tops}, nil
 }
