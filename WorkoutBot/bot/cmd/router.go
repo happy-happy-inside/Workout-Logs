@@ -23,16 +23,16 @@ func handleMessage(client *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Me
 		handleHelp(bot, msg)
 
 	case "add":
-		handleAdd(bot, msg)
+		handleAdd(client, bot, msg)
 
 	case "get":
-		handleGet(bot, msg)
+		handleGet(client, bot, msg)
 
 	case "top":
-		handleTop(bot, msg)
+		handleTop(client, bot, msg)
 
 	default:
-		send(bot, msg.Chat.ID, "Unknown command. Use /help")
+		send(bot, msg.Chat.ID, "Неизвестная. Используй /help")
 	}
 }
 
@@ -74,7 +74,7 @@ func handleAdd(client *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Messag
 	for _, entry := range entries {
 		fields := strings.Fields(strings.TrimSpace(entry))
 		if len(fields) != 5 {
-			send(bot, msg.Chat.ID, "Invalid format in one of entries")
+			send(bot, msg.Chat.ID, ("Invalid"))
 			return
 		}
 

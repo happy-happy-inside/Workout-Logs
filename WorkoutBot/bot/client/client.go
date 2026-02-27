@@ -3,7 +3,6 @@ package client
 import (
 	"bot/proto"
 	"context"
-	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -35,22 +34,13 @@ func (c *Client) Close() error {
 
 // func wrappers
 func (c *Client) AddRes(ctx context.Context, req *proto.AddResRequest) (*proto.AddResResponse, error) {
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-
 	return c.client.AddRes(ctx, req)
 }
 
 func (c *Client) GetRes(ctx context.Context, req *proto.GetResRequest) (*proto.GetResResponse, error) {
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-
 	return c.client.GetRes(ctx, req)
 }
 
 func (c *Client) TopUsers(ctx context.Context, req *proto.Uprajnenie) (*proto.Top, error) {
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-
 	return c.client.TopUsers(ctx, req)
 }
