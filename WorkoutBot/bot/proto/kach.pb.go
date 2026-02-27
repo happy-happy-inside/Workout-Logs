@@ -7,12 +7,13 @@
 package proto
 
 import (
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
+
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
 const (
@@ -264,10 +265,7 @@ func (x *GetResRequest) GetKonec() *timestamppb.Timestamp {
 
 type GetResResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Slab          *Podhpowt              `protobuf:"bytes,1,opt,name=slab,proto3" json:"slab,omitempty"`
-	Siln          *Podhpowt              `protobuf:"bytes,2,opt,name=siln,proto3" json:"siln,omitempty"`
-	Sr            float64                `protobuf:"fixed64,3,opt,name=sr,proto3" json:"sr,omitempty"`
-	Raznica       float64                `protobuf:"fixed64,4,opt,name=raznica,proto3" json:"raznica,omitempty"`
+	Results       []*Get                 `protobuf:"bytes,1,rep,name=results,proto3" json:"results,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -302,28 +300,83 @@ func (*GetResResponse) Descriptor() ([]byte, []int) {
 	return file_proto_kach_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *GetResResponse) GetSlab() *Podhpowt {
+func (x *GetResResponse) GetResults() []*Get {
+	if x != nil {
+		return x.Results
+	}
+	return nil
+}
+
+type Get struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Upr           string                 `protobuf:"bytes,1,opt,name=upr,proto3" json:"upr,omitempty"`
+	Slab          float64                `protobuf:"fixed64,2,opt,name=slab,proto3" json:"slab,omitempty"`
+	Siln          float64                `protobuf:"fixed64,3,opt,name=siln,proto3" json:"siln,omitempty"`
+	Sr            float64                `protobuf:"fixed64,4,opt,name=sr,proto3" json:"sr,omitempty"`
+	Raznica       float64                `protobuf:"fixed64,5,opt,name=raznica,proto3" json:"raznica,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Get) Reset() {
+	*x = Get{}
+	mi := &file_proto_kach_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Get) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Get) ProtoMessage() {}
+
+func (x *Get) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_kach_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Get.ProtoReflect.Descriptor instead.
+func (*Get) Descriptor() ([]byte, []int) {
+	return file_proto_kach_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *Get) GetUpr() string {
+	if x != nil {
+		return x.Upr
+	}
+	return ""
+}
+
+func (x *Get) GetSlab() float64 {
 	if x != nil {
 		return x.Slab
 	}
-	return nil
+	return 0
 }
 
-func (x *GetResResponse) GetSiln() *Podhpowt {
+func (x *Get) GetSiln() float64 {
 	if x != nil {
 		return x.Siln
 	}
-	return nil
+	return 0
 }
 
-func (x *GetResResponse) GetSr() float64 {
+func (x *Get) GetSr() float64 {
 	if x != nil {
 		return x.Sr
 	}
 	return 0
 }
 
-func (x *GetResResponse) GetRaznica() float64 {
+func (x *Get) GetRaznica() float64 {
 	if x != nil {
 		return x.Raznica
 	}
@@ -340,7 +393,7 @@ type Uprajnenie struct {
 
 func (x *Uprajnenie) Reset() {
 	*x = Uprajnenie{}
-	mi := &file_proto_kach_proto_msgTypes[5]
+	mi := &file_proto_kach_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -352,7 +405,7 @@ func (x *Uprajnenie) String() string {
 func (*Uprajnenie) ProtoMessage() {}
 
 func (x *Uprajnenie) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_kach_proto_msgTypes[5]
+	mi := &file_proto_kach_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -365,7 +418,7 @@ func (x *Uprajnenie) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Uprajnenie.ProtoReflect.Descriptor instead.
 func (*Uprajnenie) Descriptor() ([]byte, []int) {
-	return file_proto_kach_proto_rawDescGZIP(), []int{5}
+	return file_proto_kach_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *Uprajnenie) GetUpr() string {
@@ -391,7 +444,7 @@ type Top struct {
 
 func (x *Top) Reset() {
 	*x = Top{}
-	mi := &file_proto_kach_proto_msgTypes[6]
+	mi := &file_proto_kach_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -403,7 +456,7 @@ func (x *Top) String() string {
 func (*Top) ProtoMessage() {}
 
 func (x *Top) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_kach_proto_msgTypes[6]
+	mi := &file_proto_kach_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -416,7 +469,7 @@ func (x *Top) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Top.ProtoReflect.Descriptor instead.
 func (*Top) Descriptor() ([]byte, []int) {
-	return file_proto_kach_proto_rawDescGZIP(), []int{6}
+	return file_proto_kach_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *Top) GetTop() []*Dinah {
@@ -436,7 +489,7 @@ type Dinah struct {
 
 func (x *Dinah) Reset() {
 	*x = Dinah{}
-	mi := &file_proto_kach_proto_msgTypes[7]
+	mi := &file_proto_kach_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -448,7 +501,7 @@ func (x *Dinah) String() string {
 func (*Dinah) ProtoMessage() {}
 
 func (x *Dinah) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_kach_proto_msgTypes[7]
+	mi := &file_proto_kach_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -461,7 +514,7 @@ func (x *Dinah) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Dinah.ProtoReflect.Descriptor instead.
 func (*Dinah) Descriptor() ([]byte, []int) {
-	return file_proto_kach_proto_rawDescGZIP(), []int{7}
+	return file_proto_kach_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *Dinah) GetUser() string {
@@ -498,12 +551,15 @@ const file_proto_kach_proto_rawDesc = "" +
 	"\x04user\x18\x01 \x01(\tR\x04user\x12\x10\n" +
 	"\x03upr\x18\x02 \x03(\tR\x03upr\x124\n" +
 	"\anachalo\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\anachalo\x120\n" +
-	"\x05konec\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\x05konec\"\x82\x01\n" +
-	"\x0eGetResResponse\x12\"\n" +
-	"\x04slab\x18\x01 \x01(\v2\x0e.kach.podhpowtR\x04slab\x12\"\n" +
-	"\x04siln\x18\x02 \x01(\v2\x0e.kach.podhpowtR\x04siln\x12\x0e\n" +
-	"\x02sr\x18\x03 \x01(\x01R\x02sr\x12\x18\n" +
-	"\araznica\x18\x04 \x01(\x01R\araznica\"4\n" +
+	"\x05konec\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\x05konec\"5\n" +
+	"\x0eGetResResponse\x12#\n" +
+	"\aresults\x18\x01 \x03(\v2\t.kach.GetR\aresults\"i\n" +
+	"\x03Get\x12\x10\n" +
+	"\x03upr\x18\x01 \x01(\tR\x03upr\x12\x12\n" +
+	"\x04slab\x18\x02 \x01(\x01R\x04slab\x12\x12\n" +
+	"\x04siln\x18\x03 \x01(\x01R\x04siln\x12\x0e\n" +
+	"\x02sr\x18\x04 \x01(\x01R\x02sr\x12\x18\n" +
+	"\araznica\x18\x05 \x01(\x01R\araznica\"4\n" +
 	"\n" +
 	"Uprajnenie\x12\x10\n" +
 	"\x03upr\x18\x01 \x01(\tR\x03upr\x12\x14\n" +
@@ -530,37 +586,37 @@ func file_proto_kach_proto_rawDescGZIP() []byte {
 	return file_proto_kach_proto_rawDescData
 }
 
-var file_proto_kach_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_proto_kach_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_proto_kach_proto_goTypes = []any{
 	(*AddResRequest)(nil),         // 0: kach.AddResRequest
 	(*Podhpowt)(nil),              // 1: kach.podhpowt
 	(*AddResResponse)(nil),        // 2: kach.AddResResponse
 	(*GetResRequest)(nil),         // 3: kach.GetResRequest
 	(*GetResResponse)(nil),        // 4: kach.GetResResponse
-	(*Uprajnenie)(nil),            // 5: kach.Uprajnenie
-	(*Top)(nil),                   // 6: kach.Top
-	(*Dinah)(nil),                 // 7: kach.dinah
-	(*timestamppb.Timestamp)(nil), // 8: google.protobuf.Timestamp
+	(*Get)(nil),                   // 5: kach.Get
+	(*Uprajnenie)(nil),            // 6: kach.Uprajnenie
+	(*Top)(nil),                   // 7: kach.Top
+	(*Dinah)(nil),                 // 8: kach.dinah
+	(*timestamppb.Timestamp)(nil), // 9: google.protobuf.Timestamp
 }
 var file_proto_kach_proto_depIdxs = []int32{
-	1,  // 0: kach.AddResRequest.sports_exercise:type_name -> kach.podhpowt
-	8,  // 1: kach.podhpowt.date:type_name -> google.protobuf.Timestamp
-	8,  // 2: kach.GetResRequest.nachalo:type_name -> google.protobuf.Timestamp
-	8,  // 3: kach.GetResRequest.konec:type_name -> google.protobuf.Timestamp
-	1,  // 4: kach.GetResResponse.slab:type_name -> kach.podhpowt
-	1,  // 5: kach.GetResResponse.siln:type_name -> kach.podhpowt
-	7,  // 6: kach.Top.top:type_name -> kach.dinah
-	0,  // 7: kach.OrderService.AddRes:input_type -> kach.AddResRequest
-	3,  // 8: kach.OrderService.GetRes:input_type -> kach.GetResRequest
-	5,  // 9: kach.OrderService.TopUsers:input_type -> kach.Uprajnenie
-	2,  // 10: kach.OrderService.AddRes:output_type -> kach.AddResResponse
-	4,  // 11: kach.OrderService.GetRes:output_type -> kach.GetResResponse
-	6,  // 12: kach.OrderService.TopUsers:output_type -> kach.Top
-	10, // [10:13] is the sub-list for method output_type
-	7,  // [7:10] is the sub-list for method input_type
-	7,  // [7:7] is the sub-list for extension type_name
-	7,  // [7:7] is the sub-list for extension extendee
-	0,  // [0:7] is the sub-list for field type_name
+	1, // 0: kach.AddResRequest.sports_exercise:type_name -> kach.podhpowt
+	9, // 1: kach.podhpowt.date:type_name -> google.protobuf.Timestamp
+	9, // 2: kach.GetResRequest.nachalo:type_name -> google.protobuf.Timestamp
+	9, // 3: kach.GetResRequest.konec:type_name -> google.protobuf.Timestamp
+	5, // 4: kach.GetResResponse.results:type_name -> kach.Get
+	8, // 5: kach.Top.top:type_name -> kach.dinah
+	0, // 6: kach.OrderService.AddRes:input_type -> kach.AddResRequest
+	3, // 7: kach.OrderService.GetRes:input_type -> kach.GetResRequest
+	6, // 8: kach.OrderService.TopUsers:input_type -> kach.Uprajnenie
+	2, // 9: kach.OrderService.AddRes:output_type -> kach.AddResResponse
+	4, // 10: kach.OrderService.GetRes:output_type -> kach.GetResResponse
+	7, // 11: kach.OrderService.TopUsers:output_type -> kach.Top
+	9, // [9:12] is the sub-list for method output_type
+	6, // [6:9] is the sub-list for method input_type
+	6, // [6:6] is the sub-list for extension type_name
+	6, // [6:6] is the sub-list for extension extendee
+	0, // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_proto_kach_proto_init() }
@@ -574,7 +630,7 @@ func file_proto_kach_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_kach_proto_rawDesc), len(file_proto_kach_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

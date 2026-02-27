@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bot/client"
 	"log"
 	"os"
 
@@ -20,11 +21,16 @@ func main() {
 
 	updates := bot.GetUpdatesChan(u)
 
+	client, err := client.NewClient(os.Getenv("HOST"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	for update := range updates {
 		if update.Message == nil {
 			continue
 		}
 
-		handleMessage(bot, update.Message)
+		go handleMessage(client, bot, update.Message)
 	}
 }
