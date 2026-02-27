@@ -1,17 +1,18 @@
-
+version: "3.9"
 
 services:
   bot:
     build:
-       context: ./WorkoutBot/bot
-       dockerfile: Dockerfile
+      context: ./WorkoutBot/bot
+      dockerfile: Dockerfile
     container_name: bot
     networks:
       - app-network
     environment:
       TELEGRAM_TOKEN: 8323906750:AAEg2xVPwz17GcFJmvPMdCPhygCb17S0Elo
-      HOST: "50051:50051"
-  sever:
+      HOST: "server:50051"
+
+  server:
     build: 
       context: ./WorkoutServer
       dockerfile: Dockerfile
@@ -28,12 +29,13 @@ services:
       DB_NAME: workout
     depends_on:
       - database
+
   database:
     image: postgres:15
     environment:
-     POSTGRES_USER: Work
-     POSTGRES_PASSWORD: 27112007_gg
-     POSTGRES_DB: workout
+      POSTGRES_USER: Work
+      POSTGRES_PASSWORD: 27112007_gg
+      POSTGRES_DB: workout
     ports:
        - "5432:5432"
     networks:
