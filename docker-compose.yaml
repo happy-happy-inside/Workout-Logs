@@ -1,0 +1,44 @@
+
+
+services:
+  bot:
+    build:
+      context: .
+      dockerfile: WorkoutBot/Dockerfile
+    container_name: bot
+    networks:
+      - app-network
+    environment:
+      TELEGRAM_TOKEN: 8323906750:AAEg2xVPwz17GcFJmvPMdCPhygCb17S0Elo
+      HOST: "50052:50052"
+  sever:
+    build: 
+      context: .
+      dockerfile: WorkoutServer/Dockerfile
+    container_name: server
+    ports:
+      - "50051:50051"
+    networks:
+      - app-network
+    environment:
+      DB_USER: Work
+      DB_PASSWORD: 27112007_gg
+      DB_HOST: database
+      DB_PORT: 5432
+      DB_NAME: workout
+    depends_on:
+      - database
+  database:
+    image: postgres:15
+    environment:
+     POSTGRES_USER: Work
+     POSTGRES_PASSWORD: 27112007_gg
+     POSTGRES_DB: workout
+    ports:
+       - "5432:5432"
+    networks:
+       - app-network
+
+networks:
+  app-network:
+    driver: bridge

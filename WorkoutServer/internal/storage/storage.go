@@ -24,7 +24,6 @@ func NewPool(ctx context.Context) *pgx.Pool {
 	if err != nil {
 		log.Fatalf("fale connect to DB: %v\n", err)
 	}
-	defer pool.Close()
 	err = pool.Ping(ctx)
 	if err != nil {
 		log.Fatalf("Net podkluch: %v\n", err)
@@ -32,8 +31,8 @@ func NewPool(ctx context.Context) *pgx.Pool {
 	fmt.Println("DB work")
 	_, err = pool.Exec(ctx, `CREATE TABLE IF NOT EXISTS KACH(
 	ID SERIAL PRIMARY KEY,
-	USER STRING NOT NULL,
-	UPR STRING NOT NULL,
+	USERNAME TEXT NOT NULL,
+	UPR TEXT NOT NULL,
 	VES REAL NOT NULL,
 	PODH INT NOT NULL,
 	POWT INT NOT NULL,
