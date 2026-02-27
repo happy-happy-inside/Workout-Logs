@@ -29,9 +29,9 @@ func main() {
 	updates := bot.GetUpdatesChan(u)
 
 	grpcClient, err := client.NewClient(os.Getenv("HOST"))
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	for update := range updates {
 		if update.Message == nil {
@@ -70,6 +70,12 @@ func send(bot *tgbotapi.BotAPI, chatID int64, text string) {
 	bot.Send(message)
 }
 
+func sendSticker(bot *tgbotapi.BotAPI, chatID int64, fileID string) error {
+	sticker := tgbotapi.NewSticker(chatID, tgbotapi.FileID(fileID))
+	_, err := bot.Send(sticker)
+	return err
+}
+
 func handleStart(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 	text := `<--| Workout logs |-->
 Это сервис, который позволяет отслеживать тренировочные результаты.
@@ -80,11 +86,20 @@ func handleStart(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 
 func handleHelp(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 	text := `Список команд:
-/start - Приветственное сообщение
-/help - Этот список
-/add - Добавить новый результат
-/get - Вывести результат
-/top - Вывести топ пользователей`
+Приветсвенное сообщение:
+/start
+
+Вывести этот список:
+/help
+
+Добавить новый результат:
+/add упражнение повторения подходы вес дата,формат:YYYY-MM-DD, ...
+
+Вывести результат:
+/get упражнение [начало YYYY-MM-DD] [конец YYYY-MM-DD]
+
+Вывести топ пользователей:
+/top упражнение n (n - кол-во людей в топе)`
 
 	send(bot, msg.Chat.ID, text)
 }
@@ -102,7 +117,7 @@ func handleAdd(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Me
 	for _, entry := range entries {
 		fields := strings.Fields(strings.TrimSpace(entry))
 		if len(fields) != 5 {
-			send(bot, msg.Chat.ID, "Invalid format")
+			send(bot, msg.Chat.ID, "Надо так: /add упражнение повторения подходы вес дата,формат:YYYY-MM-DD, ...")
 			return
 		}
 
@@ -135,7 +150,8 @@ func handleAdd(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Me
 
 	resp, err := grpcClient.AddRes(ctx, req)
 	if err != nil {
-		send(bot, msg.Chat.ID, "Failed to add result")
+		log.Print(err)
+		send(bot, msg.Chat.ID, "Ошибка! Результат не был добавлен,проблема с сервером,  подожди чуток и попробуй еще")
 		return
 	}
 
@@ -145,7 +161,7 @@ func handleAdd(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Me
 func handleGet(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 	args := strings.Fields(msg.CommandArguments())
 	if len(args) == 0 {
-		send(bot, msg.Chat.ID, "Использование: /get упражнение [начало YYYY-MM-DD] [конец YYYY-MM-DD]")
+		send(bot, msg.Chat.ID, "Надо так: /get упражнение [начало YYYY-MM-DD] [конец YYYY-MM-DD]")
 		return
 	}
 
@@ -173,7 +189,8 @@ func handleGet(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Me
 
 	resp, err := grpcClient.GetRes(ctx, req)
 	if err != nil {
-		send(bot, msg.Chat.ID, "Failed to get results")
+		log.Print(err)
+		send(bot, msg.Chat.ID, "Ошибка! Результат не удалось найти,проблема с сервером, подожди чуток и попробуй еще")
 		return
 	}
 
@@ -220,6 +237,7 @@ func handleTop(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Me
 
 	resp, err := grpcClient.TopUsers(ctx, req)
 	if err != nil {
+		log.Print(err)
 		send(bot, msg.Chat.ID, "Failed to get top users")
 		return
 	}
