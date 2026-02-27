@@ -29,9 +29,9 @@ func main() {
 	updates := bot.GetUpdatesChan(u)
 
 	grpcClient, err := client.NewClient(os.Getenv("HOST"))
-	if err != nil {
-		log.Fatal(err)
-	}
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
 
 	for update := range updates {
 		if update.Message == nil {
