@@ -1,18 +1,22 @@
-# Базовый образ
-FROM golang:1.22-alpine
 
-# Рабочая директория внутри контейнера
+FROM golang:1.25-alpine AS builder
+
 WORKDIR /app
 
-# Копируем go.mod и go.sum отдельно (кэширование зависимостей)
+# Копируем go.mod и go.sum из КОРНЯ
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Копируем остальной код
+# Копируем весь проект
 COPY . .
 
-# Сборка бинарника
-RUN go build -o app .
+# Собираем конкретный сервис
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o app ./cmd
 
-# Команда запуска
+FROM alpine:latest
+WORKDIR /app
+
+COPY --from=builder /app/app .
+
+EXPOSE 50051
 CMD ["./app"]
