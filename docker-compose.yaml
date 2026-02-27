@@ -3,8 +3,8 @@
 services:
   bot:
     build:
-      context: .
-      dockerfile: WorkoutBot/Dockerfile
+       context: ./WorkoutBot/bot
+       dockerfile: Dockerfile
     container_name: bot
     networks:
       - app-network
@@ -13,8 +13,8 @@ services:
       HOST: "50052:50052"
   sever:
     build: 
-      context: .
-      dockerfile: WorkoutServer/Dockerfile
+      context: ./WorkoutServer
+      dockerfile: Dockerfile
     container_name: server
     ports:
       - "50051:50051"
