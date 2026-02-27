@@ -10,7 +10,7 @@ services:
       - app-network
     environment:
       TELEGRAM_TOKEN: 8323906750:AAEg2xVPwz17GcFJmvPMdCPhygCb17S0Elo
-      HOST: "50052:50052"
+      HOST: "50051:50051"
   sever:
     build: 
       context: ./WorkoutServer

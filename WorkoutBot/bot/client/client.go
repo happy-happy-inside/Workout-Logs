@@ -4,6 +4,7 @@ import (
 	"bot/proto"
 	"context"
 
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -19,6 +20,7 @@ func NewClient(addr string) (*Client, error) {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
+		log.Print("oshibka porluch")
 		return nil, err
 	}
 
@@ -34,13 +36,16 @@ func (c *Client) Close() error {
 
 // func wrappers
 func (c *Client) AddRes(ctx context.Context, req *proto.AddResRequest) (*proto.AddResResponse, error) {
+	log.Print("oshibka porluch")
 	return c.client.AddRes(ctx, req)
 }
 
 func (c *Client) GetRes(ctx context.Context, req *proto.GetResRequest) (*proto.GetResResponse, error) {
+	log.Print("oshibka porluch")
 	return c.client.GetRes(ctx, req)
 }
 
 func (c *Client) TopUsers(ctx context.Context, req *proto.Uprajnenie) (*proto.Top, error) {
+	log.Print("oshibka porluch")
 	return c.client.TopUsers(ctx, req)
 }
