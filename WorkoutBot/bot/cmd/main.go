@@ -77,37 +77,85 @@ func sendSticker(bot *tgbotapi.BotAPI, chatID int64, fileID string) error {
 }
 
 func handleStart(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
-	text := `<--| Workout logs |-->
+	text := `	 Workout logs 
 Это сервис, который позволяет отслеживать тренировочные результаты.
-Чтобы ознакомиться с функционалом — введи /help.`
+Советую для начала ознакомиться с функционалом для этого введи /help.
+Продолжая работу с этим сервсиом ты соглашаешься с тем что все данные вбитые тобой сюда, становиться достоянем общественности`
 
 	send(bot, msg.Chat.ID, text)
+
+	sendSticker(bot, msg.Chat.ID, "CAACAgIAAxkBAAFDY0xpoeoNsz4tie_zeC7YaZPf88vXmQACbxYAAqqn6UtKk_rNGpoaojoE")
 }
 
 func handleHelp(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
-	text := `Список команд:
-Приветсвенное сообщение:
-/start
+	text := `<b>Список команд:</b>
 
-Вывести этот список:
-/help
+<b>Приветственное сообщение:</b>
+<code>/start</code>
 
-Добавить новый результат:
-/add упражнение повторения подходы вес дата,формат:YYYY-MM-DD, ...
+<b>Вывести этот список:</b>
+<code>/help</code>
 
-Вывести результат:
-/get упражнение [начало YYYY-MM-DD] [конец YYYY-MM-DD]
+<b>Обрати внимание:</b>
+Все что в квадратных <code>[]</code> — опционально.
+Все параметры вводятся через пробел.
+Если в названии есть пробелы — заменяй их нижними подчеркиваниями.
+Пример:
+<code>/add присед_со_штангой</code>
+━━━━━━━━━━━━━━━━━━━
 
-Вывести топ пользователей:
-/top упражнение n (n - кол-во людей в топе)`
+<b>Добавить новый результат:</b>
+<code>/add упражнение повторения подходы вес [дата YYYY-MM-DD] [теги...]</code>
+Если не указывать дату — автоматически подставится сегодняшняя (YYYY-MM-DD).
+Теги можно писать любые.
+Можно указать несколько тегов через пробел до запятой.
+━━━━━━━━━━━━━━━━━━━
 
-	send(bot, msg.Chat.ID, text)
+<b>Управление и поиск результатов:</b>
+
+<b>Поиск:</b>
+<code>/get search [upr:упражнение] [data:YYYY-MM-DD] [teg:тег] [reps:повторения]</code>
+Выведутся все результаты, совпадающие с указанными параметрами.
+Пример:
+<code>/get search teg:День_ног</code>
+
+<b>Удаление:</b>
+<code>/get del упражнение дата:YYYY-MM-DD</code>
+
+<b>Записи за промежуток:</b>
+<code>/get period [дата_от] [дата_до] [упражнение]</code>
+Если даты не указаны — от первой записи до текущей даты.
+━━━━━━━━━━━━━━━━━━━
+
+<b>Общая статистика:</b>
+<code>/stat period дата_от дата_до [упражнение]</code>
+Если даты не указаны — от первой записи до текущей даты.
+
+<b>AI-анализ:</b>
+<code>/stat AI</code>
+Отправляет все записи в LLM для фидбека и рекомендаций.
+━━━━━━━━━━━━━━━━━━━
+
+<b>Топ пользователей:</b>
+
+<b>Лучшие:</b>
+<code>/top best упражнение n</code>
+n — количество людей в топе (1–100).
+
+<b>Мое место:</b>
+<code>/top me упражнение</code>
+`
+
+	msgConfig := tgbotapi.NewMessage(msg.Chat.ID, text)
+	msgConfig.ParseMode = "HTML"
+
+	bot.Send(msgConfig)
 }
 
 func handleAdd(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 	args := msg.CommandArguments()
 	if args == "" {
-		send(bot, msg.Chat.ID, "Надо так: /add упражнение повторения подходы вес дата,формат:YYYY-MM-DD, ...")
+		send(bot, msg.Chat.ID, "Надо так: /add упражнение повторения подходы вес [дата YYYY-MM-DD], ...")
 		return
 	}
 
@@ -116,19 +164,36 @@ func handleAdd(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Me
 
 	for _, entry := range entries {
 		fields := strings.Fields(strings.TrimSpace(entry))
-		if len(fields) != 5 {
-			send(bot, msg.Chat.ID, "Надо так: /add упражнение повторения подходы вес дата,формат:YYYY-MM-DD, ...")
+
+		// Допускаем 4 или 5 аргументов
+		if len(fields) != 4 && len(fields) != 5 {
+			send(bot, msg.Chat.ID, "Надо так: /add упражнение повторения подходы вес [дата YYYY-MM-DD], ...")
 			return
 		}
 
 		reps, err1 := strconv.ParseInt(fields[1], 10, 64)
 		sets, err2 := strconv.ParseInt(fields[2], 10, 64)
 		weight, err3 := strconv.ParseFloat(fields[3], 64)
-		date, err4 := time.Parse("2006-01-02", fields[4])
 
-		if err1 != nil || err2 != nil || err3 != nil || err4 != nil {
-			send(bot, msg.Chat.ID, "Напиши дату в формате (YYYY-MM-DD)")
+		if err1 != nil || err2 != nil || err3 != nil {
+			send(bot, msg.Chat.ID, "Повторения, подходы и вес должны быть числами")
 			return
+		}
+
+		var date time.Time
+		var err4 error
+
+		// Если дата передана — парсим
+		if len(fields) == 5 {
+			date, err4 = time.Parse("2006-01-02", fields[4])
+			if err4 != nil {
+				send(bot, msg.Chat.ID, "Напиши дату в формате YYYY-MM-DD")
+				return
+			}
+		} else {
+			// Если нет — ставим сегодняшнюю
+			now := time.Now()
+			date = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 		}
 
 		sports = append(sports, &pb.Podhpowt{
@@ -151,17 +216,16 @@ func handleAdd(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Me
 	resp, err := grpcClient.AddRes(ctx, req)
 	if err != nil {
 		log.Print(err)
-		send(bot, msg.Chat.ID, "Ошибка! Результат не был добавлен,проблема с сервером,  подожди чуток и попробуй еще")
+		send(bot, msg.Chat.ID, "Ошибка! Результат не был добавлен. Сервер не отвечает, но мы скоро все починим!")
 		return
 	}
 
 	send(bot, msg.Chat.ID, resp.Otv)
 }
+
 func handleGet(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 	args := strings.Fields(msg.CommandArguments())
 
-	// Должно быть: 1 аргумент (упражнение)
-	// или 3 аргумента (упражнение + начало + конец)
 	if len(args) != 1 && len(args) != 3 {
 		send(bot, msg.Chat.ID, "Надо так: /get упражнение [начало YYYY-MM-DD] [конец YYYY-MM-DD]")
 		return
@@ -203,7 +267,7 @@ func handleGet(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Me
 	resp, err := grpcClient.GetRes(ctx, req)
 	if err != nil {
 		log.Print(err)
-		send(bot, msg.Chat.ID, "Ошибка! Результат не удалось найти, проблема с сервером")
+		send(bot, msg.Chat.ID, "Ошибка! Сервер не отвечает. Подожди чуток и попробуй еще раз")
 		return
 	}
 
@@ -228,7 +292,7 @@ func handleGet(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Me
 func handleTop(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 	args := strings.Fields(msg.CommandArguments())
 	if len(args) != 2 {
-		send(bot, msg.Chat.ID, "Usage: /top упражение N (max 100)")
+		send(bot, msg.Chat.ID, "Надо так: /top упражение N (max 100)")
 		return
 	}
 
@@ -236,7 +300,7 @@ func handleTop(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Me
 
 	n, err := strconv.ParseInt(args[1], 10, 64)
 	if err != nil || n <= 0 || n > 100 {
-		send(bot, msg.Chat.ID, "N must be between 1 and 100")
+		send(bot, msg.Chat.ID, "N должен быть от 1 до 100")
 		return
 	}
 
@@ -251,7 +315,7 @@ func handleTop(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Me
 	resp, err := grpcClient.TopUsers(ctx, req)
 	if err != nil {
 		log.Print(err)
-		send(bot, msg.Chat.ID, "Failed to get top users")
+		send(bot, msg.Chat.ID, "")
 		return
 	}
 
