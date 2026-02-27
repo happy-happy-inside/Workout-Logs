@@ -157,10 +157,12 @@ func handleAdd(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Me
 
 	send(bot, msg.Chat.ID, resp.Otv)
 }
-
 func handleGet(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 	args := strings.Fields(msg.CommandArguments())
-	if len(args) == 0 {
+
+	// Должно быть: 1 аргумент (упражнение)
+	// или 3 аргумента (упражнение + начало + конец)
+	if len(args) != 1 && len(args) != 3 {
 		send(bot, msg.Chat.ID, "Надо так: /get упражнение [начало YYYY-MM-DD] [конец YYYY-MM-DD]")
 		return
 	}
@@ -172,11 +174,22 @@ func handleGet(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Me
 		Upr:  []string{exercise},
 	}
 
+	// Если передан диапазон дат
 	if len(args) == 3 {
-		start, err1 := time.Parse("2006-01-02", args[1])
-		end, err2 := time.Parse("2006-01-02", args[2])
-		if err1 != nil || err2 != nil {
-			send(bot, msg.Chat.ID, "Напиши дату в формате (YYYY-MM-DD)")
+		start, err := time.Parse("2006-01-02", args[1])
+		if err != nil {
+			send(bot, msg.Chat.ID, "Начальная дата в формате YYYY-MM-DD")
+			return
+		}
+
+		end, err := time.Parse("2006-01-02", args[2])
+		if err != nil {
+			send(bot, msg.Chat.ID, "Конечная дата в формате YYYY-MM-DD")
+			return
+		}
+
+		if end.Before(start) {
+			send(bot, msg.Chat.ID, "Конечная дата не может быть раньше начальной")
 			return
 		}
 
@@ -190,7 +203,7 @@ func handleGet(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Me
 	resp, err := grpcClient.GetRes(ctx, req)
 	if err != nil {
 		log.Print(err)
-		send(bot, msg.Chat.ID, "Ошибка! Результат не удалось найти,проблема с сервером, подожди чуток и попробуй еще")
+		send(bot, msg.Chat.ID, "Ошибка! Результат не удалось найти, проблема с сервером")
 		return
 	}
 
