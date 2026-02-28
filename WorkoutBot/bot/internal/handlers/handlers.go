@@ -1,11 +1,12 @@
 package handlers
 
 import (
-	client "bot/client/serverclient"
 	"bot/client/aiclient"
+	client "bot/client/serverclient"
 	action "bot/internal/botaction"
 	"bot/proto"
 	pb "bot/proto"
+	protoAI "bot/protoai"
 	"context"
 	"fmt"
 	"log"
@@ -326,22 +327,44 @@ func HandleTop(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Me
 }
 
 func HandleStat(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Message, AIclient *aiclient.Client) {
-	
-	req := &proto.StatRequest {
+
+	req := &proto.StatRequest{
 		Usr: msg.From.UserName,
 	}
-	
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	res, err := grpcClient.Stat(ctx ,req)
+	res, err := grpcClient.Stat(ctx, req)
 	if err != nil {
-		if err := action.Send(bot, msg.Chat.ID ,"Ошибка:Сервер не отвечает, но мы скоро все починим!"); err != nil {
+		if err := action.Send(bot, msg.Chat.ID, "Ошибка:Сервер не отвечает, но мы скоро все починим!"); err != nil {
 			log.Print(err)
 		}
 		log.Print(err)
 	}
 
-	action.Send(aiclient.Get())
+	request := &protoAI.GetRequest{
+		User: res.User,
+		Stat: make([]*protoAI.Podhpowt, 0, len(res.Stat)),
+	}
+
+	for i := range res.Stat {
+		request.Stat[i].Upr = res.Stat[i].Upr
+		request.Stat[i].Ves = res.Stat[i].Ves
+		request.Stat[i].Podh = res.Stat[i].Podh
+		request.Stat[i].Powt = res.Stat[i].Powt
+		request.Stat[i].Date = res.Stat[i].Date
+	}
+
+	ctxAI, cancelAI := context.WithCancel(context.Background())
+	defer cancelAI()
+
+	respons, err := AIclient.Get(ctxAI, request)
+	if err != nil {
+		log.Print(err)
+		action.Send(bot, msg.Chat.ID, "Неудалось получить AI статистику")
+		return
+	}
+
+	action.Send(bot, msg.Chat.ID, respons.Response)
 }
