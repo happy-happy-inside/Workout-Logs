@@ -10,7 +10,8 @@ services:
       - app-network
     environment:
       TELEGRAM_TOKEN: 8323906750:AAEg2xVPwz17GcFJmvPMdCPhygCb17S0Elo
-      HOST: "server:50051"
+      SERVER_HOST: "server:50051"
+      AI_HOST: "ai:50051"
   ai:
     build:
       context: ./WorkoutAIStat
