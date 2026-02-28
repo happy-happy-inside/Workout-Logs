@@ -46,3 +46,7 @@ func (c *Client) GetRes(ctx context.Context, req *proto.GetResRequest) (*proto.G
 func (c *Client) TopUsers(ctx context.Context, req *proto.Uprajnenie) (*proto.Top, error) {
 	return c.client.TopUsers(ctx, req)
 }
+
+func (c *Client) Stat(ctx context.Context, in *proto.StatRequest, opts ...grpc.CallOption) (*proto.StatResponse, error) {
+	return c.client.Stat(ctx, in)
+}

@@ -40,7 +40,7 @@ func (s *Server) AddRes(ctx context.Context, req *pb.AddResRequest) (*pb.AddResR
 	defer br.Close()
 
 	// Обязательно нужно вычитать все результаты!
-	for i := 0; i < len(req.SportsExercise); i++ {
+	for i := 0; i < len(req.ToAdd); i++ {
 		_, err := br.Exec()
 		if err != nil {
 			s.Logger.Error("ebat hendler AddRes %v", zap.Error(err))
@@ -100,4 +100,8 @@ func (s *Server) TopUsers(ctx context.Context, req *pb.Uprajnenie) (*pb.Top, err
 		tops = append(tops, &t)
 	}
 	return &pb.Top{Top: tops}, nil
+}
+
+func (s *Server) Stat(ctx context.Context, in *pb.StatRequest, opts ...grpc.CallOption) (*pb.StatResponse, error) {
+
 }
