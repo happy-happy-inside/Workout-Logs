@@ -32,7 +32,7 @@ func NewServer(ctx context.Context, logger *zap.Logger) *Server {
 }
 func (s *Server) AddRes(ctx context.Context, req *pb.AddResRequest) (*pb.AddResResponse, error) {
 	batch := pgx.Batch{}
-	for _, v := range req.SportsExercise {
+	for _, v := range req.ToAdd {
 		date := v.Date.AsTime()
 		batch.Queue(`INSERT INTO KACH (USERNAME,UPR,VES,PODH,POWT,DATE) VALUES($1,$2,$3,$4,$5,$6)`, req.User, v.Upr, v.Ves, v.Podh, v.Powt, date)
 	}
@@ -40,7 +40,7 @@ func (s *Server) AddRes(ctx context.Context, req *pb.AddResRequest) (*pb.AddResR
 	defer br.Close()
 
 	// Обязательно нужно вычитать все результаты!
-	for i := 0; i < len(req.SportsExercise); i++ {
+	for i := 0; i < len(req.ToAdd); i++ {
 		_, err := br.Exec()
 		if err != nil {
 			s.Logger.Error("ebat hendler AddRes %v", zap.Error(err))
