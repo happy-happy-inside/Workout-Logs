@@ -1,23 +1,35 @@
 syntax = "proto3";
 
 package kach;
-option go_package = "proto/";
+option go_package = "workoutserver/proto;proto";
 import "google/protobuf/timestamp.proto";
 service OrderService {
   rpc AddRes(AddResRequest) returns (AddResResponse);
   rpc GetRes(GetResRequest) returns (GetResResponse);
-  rpc TopUsers(Uprajnenie) returns(Top);
+  rpc TopUsers(Uprajnenie) returns (Top);
+  rpc Stat(StatRequest) returns (StatResponse);
 }
-message AddResRequest{
-    string user = 1;
-    repeated podhpowt sports_exercise = 2;
+
+message StatRequest {
+    string usr = 1;   
 }
-message podhpowt{
+
+message Podhpowt{
     string upr = 1;
     double  ves = 2;
     int64 podh = 3;
     int64 powt = 4;
-    google.protobuf.Timestamp date =5;
+    google.protobuf.Timestamp date = 5;
+}
+
+message StatResponse {
+    string user = 1;
+    repeated Podhpowt stat = 2;
+}
+
+message AddResRequest{
+    string user = 1;
+    repeated Podhpowt toAdd = 2;
 }
 message AddResResponse{
     string otv = 1;    
@@ -32,20 +44,21 @@ message GetResResponse{
    repeated Get results=1;
 }
 message Get{
-     string upr =1;
-    double slab =2;
-    double siln =3;
-    double sr =4;
-    double  raznica =5;
+     string upr = 1;
+    double slab = 2;
+    double siln = 3;
+    double sr = 4;
+    double  raznica = 5;
 }
 message Uprajnenie{
-    string upr =1;
-    int64 count =2;
+    string upr = 1;
+    int64 count = 2;
 }
 message Top{
-    repeated dinah top=1;
+    repeated dinah top = 1;
 }
+
 message dinah{
-    string user=1;
-    double  ves =2;
+    string user = 1;
+    double  ves = 2;
 }
