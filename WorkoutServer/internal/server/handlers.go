@@ -54,7 +54,7 @@ func (s *Server) AddRes(ctx context.Context, req *pb.AddResRequest) (*pb.AddResR
 func (s *Server) GetRes(ctx context.Context, req *pb.GetResRequest) (*pb.GetResResponse, error) {
 	grpcRes := &pb.GetResResponse{}
 	for i := range req.Upr {
-		res, err := s.Db.Query(ctx, `SELECT (PODH,POWT,VES) FROM KACH WHERE DATE>=$1 AND DATE<=$2 AND UPR = '$3' ORDER BY DATE ASC`, req.Nachalo.AsTime(), req.Konec.AsTime(), req.Upr[i])
+		res, err := s.Db.Query(ctx, `SELECT PODH,POWT,VES FROM KACH WHERE DATE>=$1 AND DATE<=$2 AND UPR = $3 ORDER BY DATE ASC`, req.Nachalo.AsTime(), req.Konec.AsTime(), req.Upr[i])
 		if err != nil {
 			s.Logger.Error("error in GetRes", zap.Error(err))
 			return &pb.GetResResponse{}, err
