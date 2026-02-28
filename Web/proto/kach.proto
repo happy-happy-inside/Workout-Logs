@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package kach;
+option go_package = "proto/";
+import "google/protobuf/timestamp.proto";
+service OrderService {
+  rpc AddRes(AddResRequest) returns (AddResResponse);
+  rpc GetRes(GetResRequest) returns (GetResResponse);
+  rpc TopUsers(Uprajnenie) returns(Top);
+}
+message AddResRequest{
+    string user = 1;
+    repeated podhpowt sports_exercise = 2;
+}
+message podhpowt{
+    string upr = 1;
+    double  ves = 2;
+    int64 podh = 3;
+    int64 powt = 4;
+    google.protobuf.Timestamp date =5;
+}
+message AddResResponse{
+    string otv = 1;    
+}
+message GetResRequest{
+    string user = 1;
+    repeated string upr =2;
+    google.protobuf.Timestamp nachalo = 3;
+    google.protobuf.Timestamp konec = 4;
+}
+message GetResResponse{
+   repeated Get results=1;
+}
+message Get{
+     string upr =1;
+    double slab =2;
+    double siln =3;
+    double sr =4;
+    double  raznica =5;
+}
+message Uprajnenie{
+    string upr =1;
+    int64 count =2;
+}
+message Top{
+    repeated dinah top=1;
+}
+message dinah{
+    string user=1;
+    double  ves =2;
+}

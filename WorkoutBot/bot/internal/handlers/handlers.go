@@ -162,8 +162,8 @@ func HandleAdd(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Me
 	defer cancel()
 
 	req := &pb.AddResRequest{
-		User:           msg.From.UserName,
-		SportsExercise: sports,
+		User:  msg.From.UserName,
+		ToAdd: sports,
 	}
 
 	resp, err := grpcClient.AddRes(ctx, req)
