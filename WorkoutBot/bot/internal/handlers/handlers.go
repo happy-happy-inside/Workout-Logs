@@ -1,8 +1,10 @@
 package handlers
 
 import (
-	"bot/client"
+	client "bot/client/serverclient"
+	"bot/client/aiclient"
 	action "bot/internal/botaction"
+	"bot/proto"
 	pb "bot/proto"
 	"context"
 	"fmt"
@@ -169,7 +171,7 @@ func HandleAdd(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Me
 	resp, err := grpcClient.AddRes(ctx, req)
 	if err != nil {
 		log.Printf("HandleAdd: grpc error for user %s: %v", msg.From.UserName, err)
-		if err := action.Send(bot, msg.Chat.ID, "Ошибка! Результат не был добавлен. Сервер не отвечает, но мы скоро все починим!"); err != nil {
+		if err := action.Send(bot, msg.Chat.ID, "Результат не был добавлен. Ошибка:Сервер не отвечает, но мы скоро все починим!"); err != nil {
 			log.Print(err)
 		}
 		return
@@ -235,7 +237,7 @@ func HandleGet(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Me
 	resp, err := grpcClient.GetRes(ctx, req)
 	if err != nil {
 		log.Printf("HandleGet: grpc error for user %s: %v", msg.From.UserName, err)
-		if err := action.Send(bot, msg.Chat.ID, "Ошибка! Сервер не отвечает. Подожди чуток и попробуй еще раз"); err != nil {
+		if err := action.Send(bot, msg.Chat.ID, " Ошибка:Сервер не отвечает, но мы скоро все починим!"); err != nil {
 			log.Print(err)
 		}
 		return
@@ -295,7 +297,7 @@ func HandleTop(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Me
 	resp, err := grpcClient.TopUsers(ctx, req)
 	if err != nil {
 		log.Printf("HandleTop: grpc error for user %s: %v", msg.From.UserName, err)
-		if err := action.Send(bot, msg.Chat.ID, "Ошибка! Сервер не отвечает."); err != nil {
+		if err := action.Send(bot, msg.Chat.ID, " Ошибка:Сервер не отвечает, но мы скоро все починим!"); err != nil {
 			log.Print(err)
 		}
 		return
@@ -321,4 +323,25 @@ func HandleTop(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Me
 	if err := action.Send(bot, msg.Chat.ID, builder.String()); err != nil {
 		log.Print(err)
 	}
+}
+
+func HandleStat(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Message, AIclient *aiclient.Client) {
+	
+	req := &proto.StatRequest {
+		Usr: msg.From.UserName,
+	}
+	
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	res, err := grpcClient.Stat(ctx ,req)
+	if err != nil {
+		if err := action.Send(bot, msg.Chat.ID ,"Ошибка:Сервер не отвечает, но мы скоро все починим!"); err != nil {
+			log.Print(err)
+		}
+		log.Print(err)
+	}
+
+	action.Send(aiclient.Get())
 }

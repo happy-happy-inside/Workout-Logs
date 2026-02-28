@@ -1,14 +1,15 @@
 package route
 
 import (
-	"bot/client"
+	"bot/client/aiclient"
+	client "bot/client/serverclient"
 	action "bot/internal/botaction"
 	hand "bot/internal/handlers"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func HandleMessage(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
+func HandleMessage(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.Message, AIclient *aiclient.Client) {
 	switch msg.Command() {
 
 	case "start":
@@ -25,6 +26,9 @@ func HandleMessage(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotap
 
 	case "top":
 		hand.HandleTop(grpcClient, bot, msg)
+
+	case "stat":
+		hand.HandleStat(grpcClient, bot, msg, AIclient)
 
 	default:
 		action.Send(bot, msg.Chat.ID, "Неизвестная команда. Используй /help")

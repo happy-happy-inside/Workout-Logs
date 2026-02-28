@@ -1,4 +1,4 @@
-package client
+package serverclient
 
 import (
 	"bot/proto"

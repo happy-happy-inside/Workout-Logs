@@ -17,15 +17,21 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+
 	logger, _ := zap.NewProduction() // или zap.NewDevelopment() для дев-режима
 	defer logger.Sync()
+
 	ctx := context.Background()
+
 	server := hand.NewServer(ctx, logger)
-	defer server.Db.Close()
+	defer server.Db.Close() //Выполнеться только после завершения
+
 	grpcServer := grpc.NewServer()
+
 	pb.RegisterOrderServiceServer(grpcServer, server)
+
 	reflection.Register(grpcServer)
 	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+		log.Fatalf("failed to serve: %v", err) // ЖЕСТКО завершает программу без выполнения defer
 	}
 }

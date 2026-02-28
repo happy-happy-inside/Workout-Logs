@@ -3,6 +3,7 @@ package structures
 import (
 	"context"
 	"fmt"
+	"time"
 	pb "workoutserver/proto"
 
 	db "workoutserver/internal/storage"
@@ -10,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Server struct {
@@ -102,6 +104,56 @@ func (s *Server) TopUsers(ctx context.Context, req *pb.Uprajnenie) (*pb.Top, err
 	return &pb.Top{Top: tops}, nil
 }
 
-func (s *Server) Stat(ctx context.Context, in *pb.StatRequest, opts ...grpc.CallOption) (*pb.StatResponse, error) {
+func (s *Server) Stat(ctx context.Context, req *pb.StatRequest) (*pb.StatResponse, error) {
+	if req.Usr == "" {
+		return &pb.StatResponse{}, fmt.Errorf("empty user")
+	}
 
+	rows, err := s.Db.Query(ctx,
+		`SELECT UPR, VES, PODH, POWT, DATE 
+		 FROM KACH 
+		 WHERE USERNAME=$1 
+		 ORDER BY DATE ASC`,
+		req.Usr,
+	)
+	if err != nil {
+		s.Logger.Error("error in Stat query", zap.Error(err))
+		return &pb.StatResponse{}, err
+	}
+	defer rows.Close()
+
+	resp := &pb.StatResponse{
+		User: req.Usr,
+	}
+
+	for rows.Next() {
+		var (
+			upr  string
+			ves  float32
+			podh int32
+			powt int32
+			date time.Time
+		)
+
+		err := rows.Scan(&upr, &ves, &podh, &powt, &date)
+		if err != nil {
+			s.Logger.Error("error in Stat scan", zap.Error(err))
+			return &pb.StatResponse{}, err
+		}
+
+		resp.Stat = append(resp.Stat, &pb.Podhpowt{
+			Upr:  upr,
+			Ves:  float64(ves),
+			Podh: int64(podh),
+			Powt: int64(powt),
+			Date: timestamppb.New(date),
+		})
+	}
+
+	if rows.Err() != nil {
+		s.Logger.Error("rows error in Stat", zap.Error(rows.Err()))
+		return &pb.StatResponse{}, rows.Err()
+	}
+
+	return resp, nil
 }

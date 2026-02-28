@@ -1,7 +1,8 @@
 package main
 
 import (
-	"bot/client"
+	"bot/client/aiclient"
+	"bot/client/serverclient"
 	"bot/internal/route"
 	"log"
 	"os"
@@ -22,7 +23,12 @@ func main() {
 
 	updates := bot.GetUpdatesChan(u)
 
-	grpcClient, err := client.NewClient(os.Getenv("HOST"))
+	AIClient, err := aiclient.NewClient(os.Getenv("AI_HOST"))
+	if err != nil {
+		log.Println("error to connect AI microservis")
+	}
+
+	grpcClient, err := serverclient.NewClient(os.Getenv("SERVER_HOST"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -32,6 +38,6 @@ func main() {
 			continue
 		}
 
-		go route.HandleMessage(grpcClient, bot, update.Message)
+		go route.HandleMessage(grpcClient, bot, update.Message, AIClient)
 	}
 }
