@@ -11,7 +11,17 @@ services:
     environment:
       TELEGRAM_TOKEN: 8323906750:AAEg2xVPwz17GcFJmvPMdCPhygCb17S0Elo
       HOST: "server:50051"
-
+  web:
+    build:
+      context: ./Web
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080" 
+    container_name: web
+    networks:
+      - app-network
+    environment:
+      CLIENT_ADDR: "server:50051"
   server:
     build: 
       context: ./WorkoutServer
