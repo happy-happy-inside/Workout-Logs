@@ -11,6 +11,17 @@ services:
     environment:
       TELEGRAM_TOKEN: 8323906750:AAEg2xVPwz17GcFJmvPMdCPhygCb17S0Elo
       HOST: "server:50051"
+  ai:
+    build:
+      context: ./WorkoutAIStat
+      dockerfile: Dockerfile
+    ports:
+      - 50000:50051
+    container_name: ai
+    networks:
+      - app-network
+    environment:
+      - DEEPSEEK_API_KEY=sk-e817402e2cbd4672ae9c4ef8ea28beba
   web:
     build:
       context: ./Web
