@@ -1,14 +1,18 @@
 package main
 
 import (
+	"context"
 	"log"
-	"net"
 	"os"
+	"os/signal"
+	"syscall"
 
-	"google.golang.org/grpc"
+	"github.com/segmentio/kafka-go"
 
-	pb "aistat/proto"
 	service "aistat/internal/server"
+	pb "aistat/proto"
+
+	"google.golang.org/protobuf/proto"
 )
 
 func main() {
@@ -18,20 +22,59 @@ func main() {
 		log.Fatal("AI_API_KEY not set")
 	}
 
-	lis, err := net.Listen("tcp", ":50051")
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+	broker := os.Getenv("KAFKA_BROKER")
+	if broker == "" {
+		broker = "kafka:9092"
 	}
 
-	grpcServer := grpc.NewServer()
+	svc := service.NewOrderServiceServer(apiKey)
 
-	orderService := service.NewOrderServiceServer(apiKey)
+	reader := kafka.NewReader(kafka.ReaderConfig{
+		Brokers: []string{broker},
+		Topic:   "ai.requests",
+		GroupID: "ai-group",
+	})
 
-	pb.RegisterOrderServiceServer(grpcServer, orderService)
+	writer := &kafka.Writer{
+		Addr:  kafka.TCP(broker),
+		Topic: "ai.responses",
+	}
 
-	log.Println("gRPC server started on :50051")
+	log.Println("AI Kafka consumer started")
 
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	for {
+		msg, err := reader.ReadMessage(ctx)
+		if err != nil {
+			log.Println("reader stopped:", err)
+			break
+		}
+
+		var req pb.GetRequest
+		if err := proto.Unmarshal(msg.Value, &req); err != nil {
+			log.Println("unmarshal error:", err)
+			continue
+		}
+
+		resp, err := svc.Handle(ctx, &req)
+
+		if err != nil {
+			resp = &pb.GetResponse{
+				Reqid: req.Reqid,
+				Error: err.Error(),
+			}
+		}
+
+		data, _ := proto.Marshal(resp)
+
+		err = writer.WriteMessages(ctx, kafka.Message{
+			Key:   msg.Key,
+			Value: data,
+		})
+		if err != nil {
+			log.Println("write response error:", err)
+		}
 	}
 }

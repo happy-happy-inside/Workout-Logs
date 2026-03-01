@@ -10,14 +10,10 @@ import (
 	"time"
 
 	pb "aistat/proto"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type OrderServiceServer struct {
-	pb.UnimplementedOrderServiceServer
-	deepseekAPIKey string // оставляем имя поля чтобы снаружи ничего не менять
+	deepseekAPIKey string
 }
 
 func NewOrderServiceServer(apiKey string) *OrderServiceServer {
@@ -26,28 +22,10 @@ func NewOrderServiceServer(apiKey string) *OrderServiceServer {
 	}
 }
 
-type deepseekRequest struct {
-	Model    string            `json:"model"`
-	Messages []deepseekMessage `json:"messages"`
-}
-
-type deepseekMessage struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
-}
-
-type deepseekResponse struct {
-	Choices []struct {
-		Message struct {
-			Content string `json:"content"`
-		} `json:"message"`
-	} `json:"choices"`
-}
-
-func (s *OrderServiceServer) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, error) {
+func (s *OrderServiceServer) Handle(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, error) {
 
 	if req.User == "" {
-		return nil, status.Error(codes.InvalidArgument, "user is required")
+		return nil, fmt.Errorf("user is required")
 	}
 
 	var statsText string
@@ -81,6 +59,7 @@ func (s *OrderServiceServer) Get(ctx context.Context, req *pb.GetRequest) (*pb.G
 	Вот журнал тренировок: 
 		%s 
 	Формат ответа:
+	Отвечай только текстом, не от чего, просто рицензия. Не используй табличики и прочее, только текст, по следующемо шаблону:
 		1. Краткая общая оценка программы (3–6 предложений)
 		2. Анализ объёма по мышечным группам (таблично или списком)
 		3. Анализ интенсивности 
@@ -94,24 +73,23 @@ func (s *OrderServiceServer) Get(ctx context.Context, req *pb.GetRequest) (*pb.G
 			- как изменить диапазоны повторений 
 		7. Предложи пример корректировки на следующую неделю 
 	Не давай общих советов вроде "следи за техникой". Все рекомендации должны быть обоснованы анализом данных и написанны на русском.`,
-
 		req.User,
 		statsText,
 	)
 
-	dsReq := deepseekRequest{
-		Model: "meta-llama/llama-3-8b-instruct",
-		Messages: []deepseekMessage{
+	dsReq := map[string]interface{}{
+		"model": "meta-llama/llama-3-8b-instruct",
+		"messages": []map[string]string{
 			{
-				Role:    "user",
-				Content: prompt,
+				"role":    "user",
+				"content": prompt,
 			},
 		},
 	}
 
 	body, err := json.Marshal(dsReq)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, err
 	}
 
 	httpReq, err := http.NewRequestWithContext(
@@ -121,38 +99,43 @@ func (s *OrderServiceServer) Get(ctx context.Context, req *pb.GetRequest) (*pb.G
 		bytes.NewBuffer(body),
 	)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, err
 	}
 
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("Authorization", "Bearer "+s.deepseekAPIKey)
-	httpReq.Header.Set("HTTP-Referer", "https://yourdomain.com")
-	httpReq.Header.Set("X-Title", "aistat")
 
 	client := &http.Client{Timeout: 30 * time.Second}
 
 	resp, err := client.Do(httpReq)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		raw, _ := io.ReadAll(resp.Body)
-		return nil, status.Errorf(codes.Internal, "openrouter error: %s", string(raw))
+		return nil, fmt.Errorf("openrouter error: %s", string(raw))
 	}
 
-	var dsResp deepseekResponse
+	var dsResp struct {
+		Choices []struct {
+			Message struct {
+				Content string `json:"content"`
+			} `json:"message"`
+		} `json:"choices"`
+	}
+
 	if err := json.NewDecoder(resp.Body).Decode(&dsResp); err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, err
 	}
 
 	if len(dsResp.Choices) == 0 {
-		return nil, status.Error(codes.Internal, "empty response from openrouter")
+		return nil, fmt.Errorf("empty response from openrouter")
 	}
 
 	return &pb.GetResponse{
-		User:     req.User,
+		Reqid:    req.Reqid,
 		Response: dsResp.Choices[0].Message.Content,
 	}, nil
 }
