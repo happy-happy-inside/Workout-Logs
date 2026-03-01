@@ -13,9 +13,9 @@ import (
 
 func main() {
 
-	apiKey := os.Getenv("DEEPSEEK_API_KEY")
+	apiKey := os.Getenv("AI_API_KEY")
 	if apiKey == "" {
-		log.Fatal("DEEPSEEK_API_KEY not set")
+		log.Fatal("AI_API_KEY not set")
 	}
 
 	lis, err := net.Listen("tcp", ":50051")

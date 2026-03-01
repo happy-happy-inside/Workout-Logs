@@ -22,7 +22,7 @@ services:
     networks:
       - app-network
     environment:
-      - DEEPSEEK_API_KEY=sk-e817402e2cbd4672ae9c4ef8ea28beba
+      AI_API_KEY: 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
   web:
     build:
       context: ./Web

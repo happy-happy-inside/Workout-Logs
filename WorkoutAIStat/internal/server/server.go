@@ -129,9 +129,14 @@ func (s *OrderServiceServer) Get(ctx context.Context, req *pb.GetRequest) (*pb.G
 	httpReq, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
-		"https://api.deepseek.com/v1/chat/completions",
+		"https://openrouter.ai/api/v1/chat/completions",
 		bytes.NewBuffer(body),
 	)
+
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("Authorization", "Bearer "+s.openRouterAPIKey)
+	httpReq.Header.Set("HTTP-Referer", "https://yourdomain.com")
+	httpReq.Header.Set("X-Title", "aistat")
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
