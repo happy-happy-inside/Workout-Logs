@@ -362,10 +362,8 @@ func HandleStat(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.M
 	ctxAI, cancelAI := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancelAI()
 
-	go func() {
-		action.Send(bot, msg.Chat.ID, "Анализирую...")
-		action.SendSticker(bot, msg.Chat.ID, "CAACAgIAAxkBAAFDgxdppARM8YouIJvp0JvrjL1E-JKZ_gACLhIAAl9K6Et2wLFpTqYtvjoE")
-	}()
+	action.Send(bot, msg.Chat.ID, "Анализирую...")
+	action.SendSticker(bot, msg.Chat.ID, "CAACAgIAAxkBAAFDgxdppARM8YouIJvp0JvrjL1E-JKZ_gACLhIAAl9K6Et2wLFpTqYtvjoE")
 
 	respons, err := AIclient.Get(ctxAI, request)
 	if err != nil {

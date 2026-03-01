@@ -23,7 +23,7 @@ func main() {
 
 	updates := bot.GetUpdatesChan(u)
 
-	AIClient, err := aiclient.NewClient(os.Getenv("AI_HOST"))
+	AIClient, err := aiclient.NewClient(os.Getenv("KAFKA_BROKERS"))
 	if err != nil {
 		log.Println("error to connect AI microservis")
 	}

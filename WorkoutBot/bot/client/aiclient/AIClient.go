@@ -1,15 +1,16 @@
 package aiclient
 
 import (
+	pb "bot/protoai"
 	proto "bot/protoai"
+
 	"context"
 	"errors"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rs/zerolog/log"
 	"github.com/segmentio/kafka-go"
-	"google.golang.org/protobuf/proto"
+	pbproto "google.golang.org/protobuf/proto"
 )
 
 const defaultTimeout = 60 * time.Second
@@ -48,18 +49,18 @@ func (c *Client) Close() error {
 
 func (c *Client) Get(ctx context.Context, req *proto.GetRequest) (*proto.GetResponse, error) {
 
+	// если нет дедлайна — ставим дефолтный
 	if _, ok := ctx.Deadline(); !ok {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, defaultTimeout)
 		defer cancel()
 	}
 
+	// correlation id
 	reqID := uuid.New().String()
+	req.Reqid = reqID
 
-	// добавляем correlation id в metadata
-	req.RequestId = reqID
-
-	data, err := proto.Marshal(req)
+	data, err := pbproto.Marshal(req)
 	if err != nil {
 		return nil, err
 	}
@@ -69,11 +70,9 @@ func (c *Client) Get(ctx context.Context, req *proto.GetRequest) (*proto.GetResp
 		Value: data,
 	})
 	if err != nil {
-		log.Error().Err(err).Msg("failed to send kafka message")
 		return nil, err
 	}
 
-	// ждём ответ
 	for {
 		msg, err := c.reader.ReadMessage(ctx)
 		if err != nil {
@@ -84,8 +83,8 @@ func (c *Client) Get(ctx context.Context, req *proto.GetRequest) (*proto.GetResp
 			continue
 		}
 
-		var resp proto.GetResponse
-		if err := proto.Unmarshal(msg.Value, &resp); err != nil {
+		var resp pb.GetResponse
+		if err := pbproto.Unmarshal(msg.Value, &resp); err != nil {
 			return nil, err
 		}
 
