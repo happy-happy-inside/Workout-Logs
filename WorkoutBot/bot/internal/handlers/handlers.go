@@ -349,15 +349,23 @@ func HandleStat(grpcClient *client.Client, bot *tgbotapi.BotAPI, msg *tgbotapi.M
 	}
 
 	for i := range res.Stat {
-		request.Stat[i].Upr = res.Stat[i].Upr
-		request.Stat[i].Ves = res.Stat[i].Ves
-		request.Stat[i].Podh = res.Stat[i].Podh
-		request.Stat[i].Powt = res.Stat[i].Powt
-		request.Stat[i].Date = res.Stat[i].Date
+		request.Stat = append(request.Stat, &protoAI.Podhpowt{
+			Upr:  res.Stat[i].Upr,
+			Ves:  res.Stat[i].Ves,
+			Podh: res.Stat[i].Podh,
+			Powt: res.Stat[i].Powt,
+			Date: res.Stat[i].Date,
+		})
+
 	}
 
-	ctxAI, cancelAI := context.WithCancel(context.Background())
+	ctxAI, cancelAI := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancelAI()
+
+	go func() {
+		action.Send(bot, msg.Chat.ID, "Анализирую...")
+		action.SendSticker(bot, msg.Chat.ID, "CAACAgIAAxkBAAFDgxdppARM8YouIJvp0JvrjL1E-JKZ_gACLhIAAl9K6Et2wLFpTqYtvjoE")
+	}()
 
 	respons, err := AIclient.Get(ctxAI, request)
 	if err != nil {
