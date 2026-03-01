@@ -2,25 +2,29 @@ syntax = "proto3";
 
 package ai;
 option go_package = "workoutserver/proto;proto";
+
 import "google/protobuf/timestamp.proto";
+
 service OrderService {
   rpc Get(GetRequest) returns (GetResponse);
 }
 
-message Podhpowt{
+message Podhpowt {
     string upr = 1;
-    double  ves = 2;
+    double ves = 2;
     int64 podh = 3;
     int64 powt = 4;
     google.protobuf.Timestamp date = 5;
 }
 
 message GetRequest {
-    string user = 1;
-    repeated Podhpowt stat = 2;
+    string reqid = 1;
+    string user = 2;
+    repeated Podhpowt stat = 3;
 }
 
 message GetResponse {
-    string user = 1;
+    string reqid = 1;
     string response = 2;
+    string error = 3;
 }

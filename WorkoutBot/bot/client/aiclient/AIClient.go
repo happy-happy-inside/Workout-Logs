@@ -3,50 +3,96 @@ package aiclient
 import (
 	proto "bot/protoai"
 	"context"
+	"errors"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	"github.com/segmentio/kafka-go"
+	"google.golang.org/protobuf/proto"
 )
 
 const defaultTimeout = 60 * time.Second
 
 type Client struct {
-	conn   *grpc.ClientConn
-	client proto.OrderServiceClient
+	writer *kafka.Writer
+	reader *kafka.Reader
 }
 
-func NewClient(addr string) (*Client, error) {
-	conn, err := grpc.Dial(
-		addr,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
-	if err != nil {
-		log.Error().Err(err).Msg("failed to connect to grpc server")
-		return nil, err
+func NewClient(broker string) (*Client, error) {
+
+	writer := &kafka.Writer{
+		Addr:     kafka.TCP(broker),
+		Topic:    "ai.requests",
+		Balancer: &kafka.LeastBytes{},
 	}
 
+	reader := kafka.NewReader(kafka.ReaderConfig{
+		Brokers: []string{broker},
+		Topic:   "ai.responses",
+		GroupID: "bot-group",
+	})
+
 	return &Client{
-		conn:   conn,
-		client: proto.NewOrderServiceClient(conn),
+		writer: writer,
+		reader: reader,
 	}, nil
 }
 
 func (c *Client) Close() error {
-	return c.conn.Close()
+	if err := c.writer.Close(); err != nil {
+		return err
+	}
+	return c.reader.Close()
 }
 
-// ===== Wrapper for OrderService =====
+func (c *Client) Get(ctx context.Context, req *proto.GetRequest) (*proto.GetResponse, error) {
 
-func (c *Client) Get(ctx context.Context, req *proto.GetRequest, opts ...grpc.CallOption) (*proto.GetResponse, error) {
-
-	// если у входящего ctx нет дедлайна — ставим дефолтный
 	if _, ok := ctx.Deadline(); !ok {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, defaultTimeout)
 		defer cancel()
 	}
 
-	return c.client.Get(ctx, req, opts...)
+	reqID := uuid.New().String()
+
+	// добавляем correlation id в metadata
+	req.RequestId = reqID
+
+	data, err := proto.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.writer.WriteMessages(ctx, kafka.Message{
+		Key:   []byte(reqID),
+		Value: data,
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("failed to send kafka message")
+		return nil, err
+	}
+
+	// ждём ответ
+	for {
+		msg, err := c.reader.ReadMessage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		if string(msg.Key) != reqID {
+			continue
+		}
+
+		var resp proto.GetResponse
+		if err := proto.Unmarshal(msg.Value, &resp); err != nil {
+			return nil, err
+		}
+
+		if resp.Error != "" {
+			return nil, errors.New(resp.Error)
+		}
+
+		return &resp, nil
+	}
 }

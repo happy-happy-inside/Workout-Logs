@@ -100,8 +100,9 @@ func (x *Podhpowt) GetDate() *timestamppb.Timestamp {
 
 type GetRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	User          string                 `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
-	Stat          []*Podhpowt            `protobuf:"bytes,2,rep,name=stat,proto3" json:"stat,omitempty"`
+	Reqid         string                 `protobuf:"bytes,1,opt,name=reqid,proto3" json:"reqid,omitempty"`
+	User          string                 `protobuf:"bytes,2,opt,name=user,proto3" json:"user,omitempty"`
+	Stat          []*Podhpowt            `protobuf:"bytes,3,rep,name=stat,proto3" json:"stat,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -136,6 +137,13 @@ func (*GetRequest) Descriptor() ([]byte, []int) {
 	return file_proto_ai_proto_rawDescGZIP(), []int{1}
 }
 
+func (x *GetRequest) GetReqid() string {
+	if x != nil {
+		return x.Reqid
+	}
+	return ""
+}
+
 func (x *GetRequest) GetUser() string {
 	if x != nil {
 		return x.User
@@ -152,8 +160,9 @@ func (x *GetRequest) GetStat() []*Podhpowt {
 
 type GetResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	User          string                 `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
+	Reqid         string                 `protobuf:"bytes,1,opt,name=reqid,proto3" json:"reqid,omitempty"`
 	Response      string                 `protobuf:"bytes,2,opt,name=response,proto3" json:"response,omitempty"`
+	Error         string                 `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -188,9 +197,9 @@ func (*GetResponse) Descriptor() ([]byte, []int) {
 	return file_proto_ai_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *GetResponse) GetUser() string {
+func (x *GetResponse) GetReqid() string {
 	if x != nil {
-		return x.User
+		return x.Reqid
 	}
 	return ""
 }
@@ -198,6 +207,13 @@ func (x *GetResponse) GetUser() string {
 func (x *GetResponse) GetResponse() string {
 	if x != nil {
 		return x.Response
+	}
+	return ""
+}
+
+func (x *GetResponse) GetError() string {
+	if x != nil {
+		return x.Error
 	}
 	return ""
 }
@@ -212,14 +228,16 @@ const file_proto_ai_proto_rawDesc = "" +
 	"\x03ves\x18\x02 \x01(\x01R\x03ves\x12\x12\n" +
 	"\x04podh\x18\x03 \x01(\x03R\x04podh\x12\x12\n" +
 	"\x04powt\x18\x04 \x01(\x03R\x04powt\x12.\n" +
-	"\x04date\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\x04date\"B\n" +
+	"\x04date\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\x04date\"X\n" +
 	"\n" +
-	"GetRequest\x12\x12\n" +
-	"\x04user\x18\x01 \x01(\tR\x04user\x12 \n" +
-	"\x04stat\x18\x02 \x03(\v2\f.ai.PodhpowtR\x04stat\"=\n" +
-	"\vGetResponse\x12\x12\n" +
-	"\x04user\x18\x01 \x01(\tR\x04user\x12\x1a\n" +
-	"\bresponse\x18\x02 \x01(\tR\bresponse26\n" +
+	"GetRequest\x12\x14\n" +
+	"\x05reqid\x18\x01 \x01(\tR\x05reqid\x12\x12\n" +
+	"\x04user\x18\x02 \x01(\tR\x04user\x12 \n" +
+	"\x04stat\x18\x03 \x03(\v2\f.ai.PodhpowtR\x04stat\"U\n" +
+	"\vGetResponse\x12\x14\n" +
+	"\x05reqid\x18\x01 \x01(\tR\x05reqid\x12\x1a\n" +
+	"\bresponse\x18\x02 \x01(\tR\bresponse\x12\x14\n" +
+	"\x05error\x18\x03 \x01(\tR\x05error26\n" +
 	"\fOrderService\x12&\n" +
 	"\x03Get\x12\x0e.ai.GetRequest\x1a\x0f.ai.GetResponseB\x1bZ\x19workoutserver/proto;protob\x06proto3"
 

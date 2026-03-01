@@ -4,7 +4,7 @@
 // - protoc             v6.33.1
 // source: proto/ai.proto
 
-package protoai
+package proto
 
 import (
 	context "context"
