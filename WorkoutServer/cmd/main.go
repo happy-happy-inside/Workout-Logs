@@ -4,6 +4,9 @@ import (
 	"context"
 	"log"
 	"net"
+	"os"
+	"time"
+	"workoutserver/internal/redis"
 	hand "workoutserver/internal/server"
 	pb "workoutserver/proto"
 
@@ -18,12 +21,18 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
+	redisAddr := os.Getenv("REDIS")
+	redis, err := redis.NewRedisClient(5 * time.Second ,5 * time.Minute, redisAddr)
+	if err != nil {
+		log.Printf("can`t create Redis client: ", err)
+	}
+
 	logger, _ := zap.NewProduction() // или zap.NewDevelopment() для дев-режима
 	defer logger.Sync()
 
 	ctx := context.Background()
 
-	server := hand.NewServer(ctx, logger)
+	server := hand.NewServer(ctx, logger, redis)
 	defer server.Db.Close() //Выполнеться только после завершения
 
 	grpcServer := grpc.NewServer()

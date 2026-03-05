@@ -63,7 +63,7 @@ func (r *RedisClient) Ping() error {
 	return fmt.Errorf("Redis not reachebl")
 }
 
-func (r *RedisClient) Set(ctx context.Context, key string, val string, ttl time.Duration) error {
+func (r *RedisClient) Set(ctx context.Context, key string, val []byte, ttl time.Duration) error {
 	if ttl == 0 {
 		ttl = r.defaultTTL
 	}
@@ -78,13 +78,17 @@ func (r *RedisClient) Set(ctx context.Context, key string, val string, ttl time.
 	return nil
 }
 
-func (r *RedisClient) Get(ctx context.Context, key string) (string, error) {
+func (r *RedisClient) Get(ctx context.Context, key string) ([]byte, error) {
 	ctx, cancel := r.checkTimeout(ctx)
 	defer cancel()
 
-	if res := r.rdb.Get(ctx, key).Val(); res != "" {
-		return res, nil
+	res, err := r.rdb.Get(ctx, key).Bytes()
+	if err != nil {
+		if err == redis.Nil {
+			return nil, fmt.Errorf("cashe miss")
+		}
+		return nil, err
 	}
 
-	return "", fmt.Errorf("Key not set")
+	return res, nil
 }

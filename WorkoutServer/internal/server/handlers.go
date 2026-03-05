@@ -3,14 +3,18 @@ package structures
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 	pb "workoutserver/proto"
 
 	db "workoutserver/internal/storage"
 
+	redis "workoutserver/internal/redis"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -18,6 +22,7 @@ type Server struct {
 	pb.UnimplementedOrderServiceServer
 	Db     pgxpool.Pool
 	Logger *zap.Logger
+	Redis  *redis.RedisClient
 }
 
 type GetResModel struct {
@@ -26,10 +31,11 @@ type GetResModel struct {
 	powt int
 }
 
-func NewServer(ctx context.Context, logger *zap.Logger) *Server {
+func NewServer(ctx context.Context, logger *zap.Logger, redis *redis.RedisClient) *Server {
 	return &Server{
 		Db:     *db.NewPool(ctx),
 		Logger: logger,
+		Redis:  redis,
 	}
 }
 func (s *Server) AddRes(ctx context.Context, req *pb.AddResRequest) (*pb.AddResResponse, error) {
@@ -85,6 +91,17 @@ func (s *Server) GetRes(ctx context.Context, req *pb.GetResRequest) (*pb.GetResR
 	return grpcRes, nil
 }
 func (s *Server) TopUsers(ctx context.Context, req *pb.Uprajnenie) (*pb.Top, error) {
+
+	key := req.Upr + strconv.Itoa(int(req.Count))
+	data, err := s.Redis.Get(ctx, key)
+	if nil == err {
+		var top pb.Top
+
+		if err := proto.Unmarshal(data, &top); nil == err {
+			return &top, nil
+		}
+	}
+
 	var tops []*pb.Dinah
 	res, err := s.Db.Query(ctx, `SELECT USERNAME,VES FROM KACH WHERE UPR=$1 ORDER BY DATE DESC LIMIT $2`, req.Upr, req.Count)
 	if err != nil {
@@ -101,7 +118,17 @@ func (s *Server) TopUsers(ctx context.Context, req *pb.Uprajnenie) (*pb.Top, err
 		}
 		tops = append(tops, &t)
 	}
-	return &pb.Top{Top: tops}, nil
+
+	Top := &pb.Top{Top: tops}
+
+	data, protoErr := proto.Marshal(Top)
+	if nil == protoErr {
+		s.Redis.Set(ctx, key, data, 1*time.Hour)
+	} else {
+		s.Logger.Error("can`t marshal cahse:", zap.Error(protoErr))
+	}
+
+	return Top, nil
 }
 
 func (s *Server) Stat(ctx context.Context, req *pb.StatRequest) (*pb.StatResponse, error) {
