@@ -22,9 +22,9 @@ func main() {
 	}
 
 	redisAddr := os.Getenv("REDIS")
-	redis, err := redis.NewRedisClient(5 * time.Second ,5 * time.Minute, redisAddr)
+	redis, err := redis.NewRedisClient(5*time.Second, 5*time.Minute, redisAddr)
 	if err != nil {
-		log.Printf("can`t create Redis client: ", err)
+		log.Fatalf("can`t create Redis client: %v", err)
 	}
 
 	logger, _ := zap.NewProduction() // или zap.NewDevelopment() для дев-режима
